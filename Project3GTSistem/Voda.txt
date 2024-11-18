@@ -1,0 +1,3 @@
+Pipe: 1; Name: Oil; Length: 567; Diameter: 500; Under repair: 0; ID entrance compressor station: 0; ID exit compressor station: 0
+Compressor_Station: 1; Namest: Oil1; Workshops: 78; ActiveWorkshops: 45; Efficiency: 57; ID diameter entrance: 500; ID diameter exit: 500
+Compressor_Station: 2; Namest: Oil2; Workshops: 78; ActiveWorkshops: 24; Efficiency: 30; ID diameter entrance: 500; ID diameter exit: 500
