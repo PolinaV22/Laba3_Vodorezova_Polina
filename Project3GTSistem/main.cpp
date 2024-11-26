@@ -6,6 +6,7 @@
 #include "Cpipes.h"
 #include "Compressor_St.h"
 #include "functions.h"
+#include <queue>
 
 using namespace std;
 
@@ -118,9 +119,7 @@ void loadFromFile(map<int, Cpipes>& pipes, map<int, Compressor_St>& stations, st
     file.close();
 }
 
-ostream& operator  << (ostream& out, Cpipes& p) {
-    return out << "Pipe: " << p.getName() << ", Length: " << p.getLength() << ", Diameter: " << p.getDiameter() << ", Under repair: " << (p.getRepairStatus() ? "Yes" : "No") << ", ID entrance compressor station: " << p.getentranse_st() << ", ID exit compressor station: " << p.getexite_st() << std::endl;
-}
+
 
 // Main function
 int main() {
@@ -218,7 +217,7 @@ int main() {
             break;
         }
         case 14: {
-            f.GPS(pipes, stations);
+            f.Topologicalsort(pipes, stations);
             break;
         }
         case 0:

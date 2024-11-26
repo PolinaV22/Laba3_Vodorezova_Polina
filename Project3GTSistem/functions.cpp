@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <queue>
 
 void functions::logAction(const std::string& action) {
     std::ofstream logFile("log.txt", std::ios::app);
@@ -68,6 +69,7 @@ void functions::display(Cpipes& p) const {
         std::cout << "Pipe: " << p.getName() << ", Length: " << p.getLength() << ", Diameter: " << p.getDiameter() << ", Under repair: " << (p.getRepairStatus() ? "Yes" : "No") << ", ID entrance compressor station: " << p.getentranse_st() << ", ID exit compressor station: " << p.getexite_st() << std::endl;
     }
 }
+
 
 void functions::displayAllPipes(std::map<int, Cpipes>& pipes) {
     if (size(pipes) == 0) {
@@ -150,7 +152,7 @@ void functions::editPipe(std::map<int, Cpipes>& pipes) {
     if (pipes.find(id) != pipes.end()) {
         pipes[id].editRepairStatus();
         logAction("Edited pipe with ID " + std::to_string(id));
-        if (pipes[id].getRepairStatus() == 0) {
+        if (pipes[id].getRepairStatus() == 1) {
             pipes[id].setentrance(init_value);
             pipes[id].setexit(init_value);
         }
@@ -189,7 +191,7 @@ void functions::batchPipes(std::map<int, Cpipes>& pipes) {
             }
             for (auto& pipe : pipes) {
                 pipe.second.editRepairStatus();
-                if (pipe.second.getRepairStatus() == 0) {
+                if (pipe.second.getRepairStatus() == 1) {
                     pipe.second.setentrance(init_value);
                     pipe.second.setexit(init_value);
                 }
@@ -223,7 +225,7 @@ void functions::batchPipes(std::map<int, Cpipes>& pipes) {
         case 2:
             for (int pipeId : ids) {
                 pipes[pipeId].editRepairStatus();
-                if (pipes[pipeId].getRepairStatus() == 0) {
+                if (pipes[pipeId].getRepairStatus() == 1) {
                     pipes[pipeId].setentrance(init_value);
                     pipes[pipeId].setexit(init_value);
                 }
@@ -444,7 +446,7 @@ void functions::searchPipes(std::map<int, Cpipes>& pipes) {
         case 2:
             for (int idd : ids) {
                 pipes[idd].editRepairStatus();
-                if (pipes[idd].getRepairStatus() == 0) {
+                if (pipes[idd].getRepairStatus() == 1) {
                     pipes[idd].setentrance(init_value);
                     pipes[idd].setexit(init_value);
                 }
@@ -483,7 +485,7 @@ void functions::searchPipes(std::map<int, Cpipes>& pipes) {
         case 2:
             for (int idd : ids) {
                 pipes[idd].editRepairStatus();
-                if (pipes[idd].getRepairStatus() == 0) {
+                if (pipes[idd].getRepairStatus() == 1) {
                     pipes[idd].setentrance(init_value);
                     pipes[idd].setexit(init_value);
                 }
@@ -645,7 +647,7 @@ void functions::GPS(std::map<int, Cpipes>& pipes, std::map<int, Compressor_St>& 
     if (stations.find(id) != stations.end() && stations.find(idexit) !=stations.end() && id != idexit) {
         if (stations[id].getdiametrentrance() == stations[idexit].getdiametrexit()) {
             for (auto& p : pipes) {
-                if (p.second.getDiameter() == stations[id].getdiametrentrance() && p.second.getentranse_st() == 0 && p.second.getexite_st() == 0 && p.second.getRepairStatus() == 1) {
+                if (p.second.getDiameter() == stations[id].getdiametrentrance() && p.second.getentranse_st() == 0 && p.second.getexite_st() == 0 && p.second.getRepairStatus() == 0) {
                     p.second.setentrance(id);
                     p.second.setexit(idexit);
                     pipeid = int(p.first);
@@ -666,7 +668,6 @@ void functions::GPS(std::map<int, Cpipes>& pipes, std::map<int, Compressor_St>& 
                     switch(choice) {
                     case 1:
                         pipeid = pipes.rbegin()->first;
-                        pipes[pipeid].editRepairStatus();
                         pipes[pipeid].setentrance(id);
                         pipes[pipeid].setexit(idexit);
                         logAction("Compressor stations " + std::to_string(id) + " and " + std::to_string(idexit) + "were connected by a pipe to the id" + std::to_string(pipeid));
@@ -734,17 +735,204 @@ void functions::GPS(std::map<int, Cpipes>& pipes, std::map<int, Compressor_St>& 
 void functions::matrix(std::map<int, Cpipes>& pipes, std::map<int, Compressor_St>& stations) {
     int i = { 0 };
     int j = { 0 };
-    size_t numPipes = pipes.size();
-    size_t numStations = stations.size();
-    std::vector <std::vector <int> > matrix(numPipes, std::vector <int> (numStations, 0));
+    int numPipes = pipes.size();
+    int numStations = stations.size();
+    std::vector <std::vector <int> > matrix(numPipes, std::vector <int>(numStations, 0));
     for (auto& p : pipes) {
         j = 0;
         for (auto& st : stations) {
-            if (p.second.getentranse_st() == st.first || p.second.getexite_st() == st.first) {
+            if (p.second.getexite_st() == st.first) {
                 matrix[i][j] = 1;
+            }
+            else {
+                if (p.second.getentranse_st() == st.first) {
+                    matrix[i][j] = -1;
+                }
             }
             j = j + 1;
         }
         i = i + 1;
     }
+    std::cout << "columns" << std::endl;
+    for (auto& st : stations) {
+        std::cout << st.first << " ";
+    }
+    std::cout << std::endl;
+    std::cout << "lines" << std::endl;
+    for (auto& p : pipes) {
+        std::cout << p.first << " ";
+    }
+    std::cout << std::endl;
+    std::cout << "--------------------------------------------------------- " << std::endl;
+    for (i = 0; i < pipes.size(); i++) {
+        for (j = 0; j < stations.size(); j++) {
+            std::cout << matrix[i][j] << " ";
+        }
+        std::cout << std::endl;
+    }
+    std::cout << std::endl;
+}
+
+std::vector<std::vector<bool>> functions::incidenceToAdjacency(const std::vector<std::vector<int>>& incidenceMatrix) {
+    int numVertices = incidenceMatrix[0].size();
+    std::vector<std::vector<bool>> adjacencyMatrix(numVertices, std::vector<bool>(numVertices, false));
+
+    for (const auto& row : incidenceMatrix) {
+        int source = -1, destination = -1;
+        for (int i = 0; i < numVertices; ++i) {
+            if (row[i] == -1) source = i; // Предполагаем ориентированный граф, -1 указывает на источник
+            if (row[i] == 1) destination = i;
+        }
+        if (source != -1 && destination != -1) adjacencyMatrix[source][destination] = true;
+    }
+    return adjacencyMatrix;
+}
+
+bool functions::hasCycle(const std::vector<std::vector<bool>>& adjMatrix, int node, std::vector<bool>& visited, std::vector<bool>& recursionStack) {
+    visited[node] = true;
+    recursionStack[node] = true;
+
+    for (int i = 0; i < adjMatrix.size(); ++i) {
+        if (adjMatrix[node][i]) {
+            if (!visited[i]) {
+                if (hasCycle(adjMatrix, i, visited, recursionStack)) {
+                    return true;
+                }
+            }
+            else if (recursionStack[i]) {
+                return true;
+            }
+        }
+    }
+
+    recursionStack[node] = false;
+    return false;
+}
+
+bool functions::isCyclic(const std::vector<std::vector<bool>>& adjMatrix) {
+    int n = adjMatrix.size();
+    std::vector<bool> visited(n, false);
+    std::vector<bool> recursionStack(n, false);
+
+    for (int i = 0; i < n; ++i) {
+        if (!visited[i]) {
+            if (hasCycle(adjMatrix, i, visited, recursionStack)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+//Функция для поиска корня
+int functions::findRoot(const std::vector<std::vector<bool>>& adjMatrix) {
+    int n = adjMatrix.size();
+    std::vector<int> inDegree(n, 0);
+
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            if (adjMatrix[i][j]) {
+                inDegree[j]++;
+            }
+        }
+    }
+
+    int rootCount = 0;
+    int root = -1;
+    for (int i = 0; i < n; ++i) {
+        if (inDegree[i] == 0) {
+            rootCount++;
+            root = i;
+        }
+    }
+
+    if (rootCount == 1) return root;
+    return -1; //нет единственного корня или граф пустой
+}
+
+// Функция топологической сортировки
+std::vector<int> functions::topologicalSort(const std::vector<std::vector<bool>>& adjMatrix) {
+    int n = adjMatrix.size();
+    std::vector<int> inDegree(n, 0);
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            if (adjMatrix[i][j]) {
+                inDegree[j]++;
+            }
+        }
+    }
+
+    std::queue<int> q;
+    for (int i = 0; i < n; ++i) {
+        if (inDegree[i] == 0) {
+            q.push(i);
+        }
+    }
+
+    std::vector<int> sorted;
+    while (!q.empty()) {
+        int u = q.front();
+        q.pop();
+        sorted.push_back(u);
+
+        for (int v = 0; v < n; ++v) {
+            if (adjMatrix[u][v]) {
+                inDegree[v]--;
+                if (inDegree[v] == 0) {
+                    q.push(v);
+                }
+            }
+        }
+    }
+
+    return sorted.size() == n ? sorted : std::vector<int>(); // Возвращает пустой вектор, если есть циклы
+}
+
+void functions::Topologicalsort(std::map<int, Cpipes>& pipes, std::map<int, Compressor_St>& stations) {
+    int i = { 0 };
+    int j = { 0 };
+    int numPipes = pipes.size();
+    int numStations = stations.size();
+    std::vector <std::vector <int> > matrix(numPipes, std::vector <int>(numStations, 0));
+    for (auto& p : pipes) {
+        j = 0;
+        for (auto& st : stations) {
+            if (p.second.getexite_st() == st.first) {
+                matrix[i][j] = 1;
+            }
+            else{
+                if (p.second.getentranse_st() == st.first) {
+                    matrix[i][j] = -1;
+                }
+            }
+            j = j + 1;
+        }
+        i = i + 1;
+    }
+    std::vector<std::vector<bool>> adjacencyMatrix = incidenceToAdjacency(matrix);
+
+    if (isCyclic(adjacencyMatrix)) {
+        std::cout << "Граф содержит цикл." << std::endl;
+    }
+    else {
+        int root = findRoot(adjacencyMatrix);
+        if (root != -1) {
+            std::cout << "Tree root: " << root << std::endl;
+            std::vector<int> sorted = topologicalSort(adjacencyMatrix);
+            if (!sorted.empty()) {
+                std::cout << "Topological sorting: ";
+                for (int i : sorted) {
+                    std::cout << i + 1 << " ";
+                }
+                std::cout << "Matrix column numbers are displayed here." << std::endl;
+            }
+            else {
+                std::cout << "Topological sorting error." << std::endl;
+            }
+        }
+        else {
+            std::cout << "The graph does not have a unique root." << std::endl;
+        }
+    }
+
 }
